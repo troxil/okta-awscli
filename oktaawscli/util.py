@@ -11,5 +11,5 @@ def input(prompt=None):
     if not prompt:
         return _input()
 
-    print(prompt.rstrip('\n'), end='', file=sys.stderr, flush=True)
+    print(prompt.rstrip("\n"), end="", file=sys.stderr, flush=True)
     return _input()
