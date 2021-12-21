@@ -21,9 +21,7 @@ class OktaAuthMfaApp:
         flow_state = self._get_initial_flow_state(embed_link, state_token)
 
         while flow_state.get("apiResponse").get("status") != "SUCCESS":
-            flow_state = self._next_login_step(
-                flow_state.get("stateToken"), flow_state.get("apiResponse")
-            )
+            flow_state = self._next_login_step(flow_state.get("stateToken"), flow_state.get("apiResponse"))
 
         return flow_state["apiResponse"]
 
@@ -31,9 +29,7 @@ class OktaAuthMfaApp:
         """decide what the next step in the login process is"""
         if "errorCode" in login_data:
             self.logger.error(
-                "LOGIN ERROR: {} | Error Code: {}".format(
-                    login_data["errorSummary"], login_data["errorCode"]
-                )
+                "LOGIN ERROR: {} | Error Code: {}".format(login_data["errorSummary"], login_data["errorCode"])
             )
             sys.exit(2)
 
@@ -43,9 +39,7 @@ class OktaAuthMfaApp:
             self.logger.error("You are not authenticated -- please try to log in again")
             sys.exit(2)
         elif status == "LOCKED_OUT":
-            self.logger.error(
-                "Your Okta access has been locked out due to failed login attempts."
-            )
+            self.logger.error("Your Okta access has been locked out due to failed login attempts.")
             sys.exit(2)
         elif status == "MFA_ENROLL":
             self.logger.error("You must enroll in MFA before using this tool.")
@@ -56,9 +50,7 @@ class OktaAuthMfaApp:
             if "factorResult" in login_data and login_data["factorResult"] == "WAITING":
                 return self._check_push_result(state_token, login_data)
             else:
-                return self._login_input_mfa_challenge(
-                    state_token, login_data["_links"]["next"]["href"]
-                )
+                return self._login_input_mfa_challenge(state_token, login_data["_links"]["next"]["href"])
         else:
             raise RuntimeError("Unknown login status: " + status)
 
@@ -93,11 +85,7 @@ class OktaAuthMfaApp:
 
         # filter the factor list down to just the types specified in preferred_mfa_type
         if self._preferred_mfa_type is not None:
-            factors = list(
-                filter(
-                    lambda item: item["factorType"] == self._preferred_mfa_type, factors
-                )
-            )
+            factors = list(filter(lambda item: item["factorType"] == self._preferred_mfa_type, factors))
 
         if len(factors) == 1:
             factor_name = self._build_factor_name(factors[0])
@@ -123,23 +111,14 @@ class OktaAuthMfaApp:
     def _build_factor_name(factor):
         """Build the display name for a MFA factor based on the factor type"""
         if factor["factorType"] == "push":
-            return (
-                "Okta Verify App: "
-                + factor["profile"]["deviceType"]
-                + ": "
-                + factor["profile"]["name"]
-            )
+            return "Okta Verify App: " + factor["profile"]["deviceType"] + ": " + factor["profile"]["name"]
         elif factor["factorType"] == "sms":
             return factor["factorType"] + ": " + factor["profile"]["phoneNumber"]
         elif factor["factorType"] == "call":
             return factor["factorType"] + ": " + factor["profile"]["phoneNumber"]
         elif factor["factorType"] == "token:software:totp":
             return (
-                factor["factorType"]
-                + "( "
-                + factor["provider"]
-                + " ) : "
-                + factor["profile"]["credentialId"]
+                factor["factorType"] + "( " + factor["provider"] + " ) : " + factor["profile"]["credentialId"]
             )
         elif factor["factorType"] == "token":
             return factor["factorType"] + ": " + factor["profile"]["credentialId"]
@@ -155,9 +134,7 @@ class OktaAuthMfaApp:
             verify=self._verify_ssl_certs,
         )
 
-        self.logger.info(
-            "A verification code has been sent to " + factor["profile"]["phoneNumber"]
-        )
+        self.logger.info("A verification code has been sent to " + factor["profile"]["phoneNumber"])
         response_data = response.json()
 
         if "stateToken" in response_data:
@@ -181,10 +158,7 @@ class OktaAuthMfaApp:
             verify=self._verify_ssl_certs,
         )
 
-        self.logger.info(
-            "You should soon receive a phone call at "
-            + factor["profile"]["phoneNumber"]
-        )
+        self.logger.info("You should soon receive a phone call at " + factor["profile"]["phoneNumber"])
         response_data = response.json()
 
         if "stateToken" in response_data:
@@ -231,13 +205,9 @@ class OktaAuthMfaApp:
         elif factor["factorType"] == "call":
             return self._login_send_call(state_token, factor)
         elif factor["factorType"] == "token:software:totp":
-            return self._login_input_mfa_challenge(
-                state_token, factor["_links"]["verify"]["href"]
-            )
+            return self._login_input_mfa_challenge(state_token, factor["_links"]["verify"]["href"])
         elif factor["factorType"] == "token":
-            return self._login_input_mfa_challenge(
-                state_token, factor["_links"]["verify"]["href"]
-            )
+            return self._login_input_mfa_challenge(state_token, factor["_links"]["verify"]["href"])
         elif factor["factorType"] == "push":
             return self._login_send_push(state_token, factor)
 

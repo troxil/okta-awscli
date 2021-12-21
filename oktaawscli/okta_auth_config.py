@@ -44,14 +44,10 @@ class OktaAuthConfig:
 
         try:
             if not validators.url(app_link):
-                self.logger.error(
-                    "The app-link provided: %s is an invalid url" % app_link
-                )
+                self.logger.error("The app-link provided: %s is an invalid url" % app_link)
                 sys.exit(-1)
         except TypeError as ex:
-            self.logger.error(
-                "Malformed string in app link URL. Ensure there are no invalid characters."
-            )
+            self.logger.error("Malformed string in app link URL. Ensure there are no invalid characters.")
 
         self.logger.info("App Link set as: %s" % app_link)
         return app_link
@@ -89,9 +85,7 @@ class OktaAuthConfig:
             try:
                 return int(duration)
             except ValueError:
-                self.logger.warn(
-                    "Duration could not be converted to a number," " ignoring."
-                )
+                self.logger.warn("Duration could not be converted to a number," " ignoring.")
         return None
 
     def write_role_to_profile(self, okta_profile, role_arn):

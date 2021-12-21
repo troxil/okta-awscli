@@ -1,9 +1,12 @@
 [tool.poetry]
-name = "okta-awscli"
+name = "oktaawscli"
 version = "0.5.0"
 description = "Provides a wrapper for Okta authentication to awscli"
 authors = ['James <james@jameshale.net>',]
 readme = "README.md"
+
+[tool.poetry.scripts]
+okta-awscli = "oktaawscli.cli:main"
 
 [tool.poetry.dependencies]
 python = ">=3.6.2,<4.0"
@@ -19,9 +22,24 @@ pytest = "^5.2"
 pylint = "^2.11.1"
 black = "^21.11b1"
 
-[tool.poetry.scripts]
-okta-awscli = "oktaawscli.okta_awscli:main"
-
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 110
+target-version = ['py36', 'py37', 'py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''

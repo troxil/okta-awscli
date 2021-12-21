@@ -32,9 +32,7 @@ class OktaAuthMfaBase:
             if factor["factorType"] in supported_factor_types:
                 supported_factors.append(factor)
             else:
-                self.logger.error(
-                    "Unsupported factorType: %s" % (factor["factorType"],)
-                )
+                self.logger.error("Unsupported factorType: %s" % (factor["factorType"],))
 
         supported_factors = sorted(
             supported_factors,
@@ -74,8 +72,7 @@ class OktaAuthMfaBase:
             if not self.factor:
                 factor_choice = int(input("Please select the MFA factor: ")) - 1
             self.logger.info(
-                "Performing secondary authentication using: %s"
-                % supported_factors[factor_choice]["provider"]
+                "Performing secondary authentication using: %s" % supported_factors[factor_choice]["provider"]
             )
             session_token = self._verify_single_factor(supported_factors[factor_choice])
         else:
@@ -101,14 +98,10 @@ class OktaAuthMfaBase:
         if "status" in resp_json:
             if resp_json["status"] == "SUCCESS":
                 return resp_json["sessionToken"]
-            elif (
-                resp_json["status"] == "MFA_CHALLENGE" and factor["factorType"] != "u2f"
-            ):
+            elif resp_json["status"] == "MFA_CHALLENGE" and factor["factorType"] != "u2f":
                 print("Waiting for push verification...")
                 while True:
-                    resp = requests.post(
-                        resp_json["_links"]["next"]["href"], json=req_data
-                    )
+                    resp = requests.post(resp_json["_links"]["next"]["href"], json=req_data)
                     resp_json = resp.json()
                     if resp_json["status"] == "SUCCESS":
                         return resp_json["sessionToken"]
@@ -131,18 +124,10 @@ class OktaAuthMfaBase:
                     sys.exit(1)
 
                 challenge = dict()
-                challenge["appId"] = resp_json["_embedded"]["factor"]["profile"][
-                    "appId"
-                ]
-                challenge["version"] = resp_json["_embedded"]["factor"]["profile"][
-                    "version"
-                ]
-                challenge["keyHandle"] = resp_json["_embedded"]["factor"]["profile"][
-                    "credentialId"
-                ]
-                challenge["challenge"] = resp_json["_embedded"]["factor"]["_embedded"][
-                    "challenge"
-                ]["nonce"]
+                challenge["appId"] = resp_json["_embedded"]["factor"]["profile"]["appId"]
+                challenge["version"] = resp_json["_embedded"]["factor"]["profile"]["version"]
+                challenge["keyHandle"] = resp_json["_embedded"]["factor"]["profile"]["credentialId"]
+                challenge["challenge"] = resp_json["_embedded"]["factor"]["_embedded"]["challenge"]["nonce"]
 
                 print("Please touch your U2F device...")
                 auth_response = None
@@ -153,14 +138,10 @@ class OktaAuthMfaBase:
                                 auth_response = u2f.authenticate(
                                     dev,
                                     challenge,
-                                    resp_json["_embedded"]["factor"]["profile"][
-                                        "appId"
-                                    ],
+                                    resp_json["_embedded"]["factor"]["profile"]["appId"],
                                 )
                                 req_data.update(auth_response)
-                                resp = requests.post(
-                                    resp_json["_links"]["next"]["href"], json=req_data
-                                )
+                                resp = requests.post(resp_json["_links"]["next"]["href"], json=req_data)
                                 resp_json = resp.json()
                                 if resp_json["status"] == "SUCCESS":
                                     return resp_json["sessionToken"]

@@ -91,10 +91,7 @@ of roles assigned to you."""
             )
         except ClientError as ex:
             if logger:
-                logger.error(
-                    "Could not retrieve credentials: %s"
-                    % ex.response["Error"]["Message"]
-                )
+                logger.error("Could not retrieve credentials: %s" % ex.response["Error"]["Message"])
                 sys.exit(-1)
             else:
                 raise
@@ -120,14 +117,10 @@ of roles assigned to you."""
             return False
 
         elif not parser.has_section(self.profile):
-            self.logger.info(
-                "No existing credentials found. Requesting new credentials."
-            )
+            self.logger.info("No existing credentials found. Requesting new credentials.")
             return False
 
-        self.logger.debug(
-            "Checking STS token against ARN partition: %s" % self.aws_partition
-        )
+        self.logger.debug("Checking STS token against ARN partition: %s" % self.aws_partition)
         if self.aws_partition == AwsPartition.AWS_US_GOV:
             session = boto3.Session(profile_name=profile, region_name="us-gov-west-1")
         else:
@@ -139,16 +132,12 @@ of roles assigned to you."""
 
         except ClientError as ex:
             if ex.response["Error"]["Code"] == "ExpiredToken":
-                self.logger.info(
-                    "Temporary credentials have expired. Requesting new credentials."
-                )
+                self.logger.info("Temporary credentials have expired. Requesting new credentials.")
             elif ex.response["Error"]["Code"] == "InvalidClientTokenId":
                 self.logger.info("Credential is invalid. Requesting new credentials.")
             else:
                 # See https://docs.aws.amazon.com/STS/latest/APIReference/CommonErrors.html
-                self.logger.info(
-                    "An unhandled error occurred. Requesting new credentials."
-                )
+                self.logger.info("An unhandled error occurred. Requesting new credentials.")
 
             return False
 
@@ -174,9 +163,7 @@ of roles assigned to you."""
         with open(self.creds_file, "w+") as configfile:
             config.write(configfile)
         self.logger.info("Temporary credentials written to profile: %s" % self.profile)
-        self.logger.info(
-            "Invoke using: aws --profile %s <service> <command>" % self.profile
-        )
+        self.logger.info("Invoke using: aws --profile %s <service> <command>" % self.profile)
 
     @staticmethod
     def __extract_available_roles_from(assertion):
@@ -185,9 +172,7 @@ of roles assigned to you."""
         roles = []
         role_tuple = namedtuple("RoleTuple", ["principal_arn", "role_arn"])
         root = ET.fromstring(base64.b64decode(assertion))
-        for saml2attribute in root.iter(
-            "{urn:oasis:names:tc:SAML:2.0:assertion}Attribute"
-        ):
+        for saml2attribute in root.iter("{urn:oasis:names:tc:SAML:2.0:assertion}Attribute"):
             if saml2attribute.get("Name") == aws_attribute_role:
                 for saml2attributevalue in saml2attribute.iter(attribute_value_urn):
                     result_set = saml2attributevalue.text.split(",")
@@ -213,9 +198,7 @@ of roles assigned to you."""
                 secret_access_key = creds["SecretAccessKey"]
                 session_token = creds["SessionToken"]
                 arn_region = role.principal_arn.split(":")[1]
-                iam_region = (
-                    "us-gov-west-1" if arn_region == "aws-us-gov" else "us-east-1"
-                )
+                iam_region = "us-gov-west-1" if arn_region == "aws-us-gov" else "us-east-1"
 
                 client = boto3.client(
                     "iam",

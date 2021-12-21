@@ -62,9 +62,7 @@ class OktaAuth:
             if resp_json["status"] == "MFA_REQUIRED":
                 factors_list = resp_json["_embedded"]["factors"]
                 state_token = resp_json["stateToken"]
-                mfa_base = OktaAuthMfaBase(
-                    self.logger, state_token, self.factor, self.totp_token
-                )
+                mfa_base = OktaAuthMfaBase(self.logger, state_token, self.factor, self.totp_token)
                 session_token = mfa_base.verify_mfa(factors_list)
             elif resp_json["status"] == "SUCCESS":
                 session_token = resp_json["sessionToken"]
@@ -86,18 +84,14 @@ Please enroll an MFA factor in the Okta Web UI first!"""
     def get_session(self, session_token):
         """Gets a session cookie from a session token"""
         data = {"sessionToken": session_token}
-        resp = self.session.post(
-            self.https_base_url + "/api/v1/sessions", json=data
-        ).json()
+        resp = self.session.post(self.https_base_url + "/api/v1/sessions", json=data).json()
         return resp["id"]
 
     def get_apps(self, session_id):
         """Gets apps for the user"""
         sid = "sid=%s" % session_id
         headers = {"Cookie": sid}
-        resp = self.session.get(
-            self.https_base_url + "/api/v1/users/me/appLinks", headers=headers
-        ).json()
+        resp = self.session.get(self.https_base_url + "/api/v1/users/me/appLinks", headers=headers).json()
         aws_apps = []
         for app in resp:
             if app["appName"] == "amazon_aws":
@@ -131,9 +125,7 @@ Please enroll an MFA factor in the Okta Web UI first!"""
 
     def get_mfa_assertion(self, html):
         soup = bs(html.text, "html.parser")
-        if hasattr(soup.title, "string") and re.match(
-            ".* - Extra Verification$", soup.title.string
-        ):
+        if hasattr(soup.title, "string") and re.match(".* - Extra Verification$", soup.title.string):
             state_token = decode(
                 re.search(r"var stateToken = '(.*)';", html.text).group(1),
                 "unicode-escape",
@@ -144,9 +136,7 @@ Please enroll an MFA factor in the Okta Web UI first!"""
 
         self.session.cookies["oktaStateToken"] = state_token
 
-        mfa_app = OktaAuthMfaApp(
-            self.logger, self.session, self.verify_ssl, self.auth_url
-        )
+        mfa_app = OktaAuthMfaApp(self.logger, self.session, self.verify_ssl, self.auth_url)
         api_response = mfa_app.stepup_auth(self.auth_url, state_token)
         resp = self.session.get(self.app_link)
 
@@ -167,9 +157,7 @@ Please enroll an MFA factor in the Okta Web UI first!"""
         self.session_id = self.get_session(self.session_token)
         if not self.app_link:
             app_name, self.app_link = self.get_apps(self.session_id)
-            self.okta_auth_config.write_applink_to_profile(
-                self.okta_profile, self.app_link
-            )
+            self.okta_auth_config.write_applink_to_profile(self.okta_profile, self.app_link)
         else:
             app_name = None
         self.session.cookies["sid"] = self.session_id

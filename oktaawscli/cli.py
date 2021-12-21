@@ -1,14 +1,16 @@
 """ Wrapper script for awscli which handles Okta auth """
+import logging
 # pylint: disable=C0325,R0913,R0914
 import os
 import sys
 from subprocess import call
-import logging
+
 import click
-from oktaawscli.version import __version__
-from oktaawscli.okta_auth import OktaAuth
-from oktaawscli.okta_auth_config import OktaAuthConfig
-from oktaawscli.aws_auth import AwsAuth
+
+from .aws_auth import AwsAuth
+from .okta_auth import OktaAuth
+from .okta_auth_config import OktaAuthConfig
+from .version import __version__
 
 
 def get_credentials(
@@ -43,18 +45,14 @@ def get_credentials(
     okta_auth_config.write_role_to_profile(okta_profile, role_arn)
     duration = okta_auth_config.duration_for(okta_profile)
 
-    sts_token = aws_auth.get_sts_token(
-        role_arn, principal_arn, assertion, duration=duration, logger=logger
-    )
+    sts_token = aws_auth.get_sts_token(role_arn, principal_arn, assertion, duration=duration, logger=logger)
     access_key_id = sts_token["AccessKeyId"]
     secret_access_key = sts_token["SecretAccessKey"]
     session_token = sts_token["SessionToken"]
     session_token_expiry = sts_token["Expiration"]
     logger.info("Session token expires on: %s" % session_token_expiry)
     if not aws_auth.profile:
-        exports = console_output(
-            access_key_id, secret_access_key, session_token, verbose
-        )
+        exports = console_output(access_key_id, secret_access_key, session_token, verbose)
         if cache:
             cache = open("%s/.okta-credentials.cache" % (os.path.expanduser("~"),), "w")
             cache.write(exports)
@@ -83,9 +81,7 @@ def console_output(access_key_id, secret_access_key, session_token, verbose):
 # pylint: disable=R0913
 @click.command()
 @click.option("-v", "--verbose", is_flag=True, help="Enables verbose mode")
-@click.option(
-    "-V", "--version", is_flag=True, help="Outputs version number and sys.exits"
-)
+@click.option("-V", "--version", is_flag=True, help="Outputs version number and sys.exits")
 @click.option("-d", "--debug", is_flag=True, help="Enables debug mode")
 @click.option(
     "-f",
@@ -114,9 +110,7 @@ created. If omitted, credentials will output to console.\n",
     help="Cache the default profile credentials \
 to ~/.okta-credentials.cache\n",
 )
-@click.option(
-    "-r", "--refresh-role", is_flag=True, help="Refreshes the AWS role to be assumed"
-)
+@click.option("-r", "--refresh-role", is_flag=True, help="Refreshes the AWS role to be assumed")
 @click.option("-t", "--token", help="TOTP token from your authenticator app")
 @click.option("-l", "--lookup", is_flag=True, help="Look up AWS account names")
 @click.option("-U", "--username", "okta_username", help="Okta username")
@@ -182,9 +176,3 @@ def main(
         cmdline = ["aws", "--profile", profile] + list(awscli_args)
         logger.info("Invoking: %s", " ".join(cmdline))
         call(cmdline)
-
-
-if __name__ == "__main__":
-    # pylint: disable=E1120
-    main()
-    # pylint: enable=E1120
